@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#c0392b">
+<title>我的每日备忘录</title>
+<style>
+  :root{
+    --red:#c0392b; --red-dark:#962d22; --blue:#1d6fa5; --blue-dark:#15567f;
+    --bg:#fdf6f3; --card:#ffffff; --ink:#2c2c2c; --muted:#8a8a8a; --ok:#2e9b5b;
+    --warn:#e08e0b;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(180deg,#fff3ee,#fdf6f3 240px);color:var(--ink);padding-bottom:90px}
+  header{background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;
+    padding:18px 16px 14px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px rgba(192,57,43,.25)}
+  header h1{margin:0;font-size:20px;display:flex;align-items:center;gap:8px}
+  header .sub{font-size:12px;opacity:.85;margin-top:4px}
+  header .date{font-size:12px;opacity:.9;margin-top:2px}
+  .wrap{max-width:680px;margin:0 auto;padding:14px}
+  .panel{background:var(--card);border-radius:16px;padding:14px;margin-bottom:14px;
+    box-shadow:0 3px 12px rgba(0,0,0,.06)}
+  .add-row{display:flex;gap:8px;flex-direction:column}
+  .add-row textarea{flex:1;min-height:64px;border:1px solid #eee;border-radius:10px;
+    padding:10px;font-size:15px;outline:none;resize:vertical;font-family:inherit}
+  .add-row textarea:focus{border-color:var(--blue)}
+  .add-bar{display:flex;gap:8px;align-items:center;margin-top:8px}
+  .btn{border:none;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;
+    color:#fff;background:var(--blue);cursor:pointer;transition:.15s}
+  .btn:active{transform:scale(.96)}
+  .btn.red{background:var(--red)}
+  .btn.ghost{background:#f0f0f0;color:#555}
+  .btn.sm{padding:6px 10px;font-size:12px}
+  .stats{display:flex;gap:12px}
+  .stat{flex:1;background:linear-gradient(135deg,#eef6fb,#fdf6f3);
+    border-radius:12px;padding:10px;text-align:center}
+  .stat .n{font-size:22px;font-weight:700;color:var(--blue-dark)}
+  .stat .l{font-size:12px;color:var(--muted)}
+  .tabs{display:flex;gap:6px;margin-bottom:4px}
+  .tab{flex:1;text-align:center;padding:8px 4px;border-radius:10px;font-size:13px;
+    background:#f3f3f3;color:#666;cursor:pointer}
+  .tab.on{background:var(--blue);color:#fff;font-weight:600}
+  .search{width:100%;border:1px solid #eee;border-radius:10px;padding:9px 12px;
+    font-size:14px;outline:none;margin-bottom:10px}
+  .search:focus{border-color:var(--blue)}
+  .item{border:1px solid #f0e6e2;border-radius:14px;padding:12px;margin-top:10px;
+    display:flex;gap:10px;align-items:flex-start}
+  .item.done{background:#f7fbf8}
+  .item.done .txt{text-decoration:line-through;color:var(--muted)}
+  .item.star{border-color:var(--warn);box-shadow:0 0 0 1px rgba(224,142,11,.25) inset}
+  .chk{width:22px;height:22px;border-radius:50%;border:2px solid #ccc;flex:0 0 auto;
+    margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:#fff}
+  .chk.on{background:var(--ok);border-color:var(--ok)}
+  .body{flex:1;min-width:0}
+  .txt{font-size:15px;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+  .meta{font-size:11px;color:var(--muted);margin-top:5px}
+  .ops{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .icon{cursor:pointer;border:none;background:none;font-size:15px;padding:2px 4px}
+  .empty{text-align:center;color:var(--muted);padding:26px 0;font-size:14px}
+  .tip{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+  footer{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📝 我的每日备忘录</h1>
+  <div class="date" id="today"></div>
+  <div class="sub">随手记 · 可标记重要 / 完成 · 数据存本机</div>
+</header>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="add-row">
+      <textarea id="t" placeholder="记点什么…（一行一条，或一段也行）"></textarea>
+      <div class="add-bar">
+        <button class="btn red" onclick="add()">+ 添加备忘</button>
+        <button class="btn ghost sm" onclick="clearDone()">清已完成</button>
+      </div>
+    </div>
+    <div class="tip">数据保存在本机浏览器（localStorage），刷新不丢；换手机或清缓存需重新录入。</div>
+  </div>
+
+  <div class="panel">
+    <div class="stats">
+      <div class="stat"><div class="n" id="sTotal">0</div><div class="l">全部</div></div>
+      <div class="stat"><div class="n" id="sTodo">0</div><div class="l">未完成</div></div>
+      <div class="stat"><div class="n" id="sDone">0</div><div class="l">已完成</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tabs">
+      <div class="tab on" data-f="all" onclick="setF('all')">全部</div>
+      <div class="tab" data-f="todo" onclick="setF('todo')">进行中</div>
+      <div class="tab" data-f="done" onclick="setF('done')">已完成</div>
+      <div class="tab" data-f="star" onclick="setF('star')">重要</div>
+    </div>
+    <input class="search" id="q" placeholder="🔍 搜索备忘…" oninput="render()">
+    <div id="list"></div>
+  </div>
+
+  <footer>纯前端单页备忘录 · 可"添加到主屏幕"当 App 用</footer>
+</div>
+
+<script>
+const K='my_memo_v1';
+let state=load();
+let filter='all';
+function load(){try{return JSON.parse(localStorage.getItem(K))||{items:[]}}catch(e){return{items:[]}}}
+function save(){localStorage.setItem(K,JSON.stringify(state))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function clock(){const d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+
+document.getElementById('today').textContent=new Date().toLocaleDateString('zh-CN',
+  {year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+function add(){
+  const v=document.getElementById('t').value.trim();
+  if(!v)return;
+  v.split(/\n+/).filter(Boolean).forEach(line=>{
+    state.items.unshift({id:uid(),text:line.trim(),done:false,star:false,time:clock()});
+  });
+  document.getElementById('t').value='';
+  save();render();
+}
+function del(id){state.items=state.items.filter(x=>x.id!==id);save();render()}
+function toggleDone(id){const x=state.items.find(i=>i.id===id);if(x){x.done=!x.done;save();render()}}
+function toggleStar(id){const x=state.items.find(i=>i.id===id);if(x){x.star=!x.star;save();render()}}
+function edit(id){const x=state.items.find(i=>i.id===id);if(!x)return;
+  const v=prompt('编辑备忘',x.text);if(v&&v.trim()){x.text=v.trim();save();render()}}
+function clearDone(){state.items=state.items.filter(x=>!x.done);save();render()}
+function setF(f){filter=f;document.querySelectorAll('.tab').forEach(t=>
+  t.classList.toggle('on',t.dataset.f===f));render()}
+
+function render(){
+  const q=document.getElementById('q').value.trim().toLowerCase();
+  let arr=state.items.filter(x=>{
+    if(filter==='todo'&&x.done)return false;
+    if(filter==='done'&&!x.done)return false;
+    if(filter==='star'&&!x.star)return false;
+    if(q&&!x.text.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const list=document.getElementById('list');list.innerHTML='';
+  if(!arr.length){list.innerHTML='<div class="empty">这里还没有备忘 🌿</div>';}
+  arr.forEach(x=>{
+    const d=document.createElement('div');
+    d.className='item'+(x.done?' done':'')+(x.star?' star':'');
+    d.innerHTML=`
+      <div class="chk ${x.done?'on':''}" onclick="toggleDone('${x.id}')">${x.done?'✓':''}</div>
+      <div class="body">
+        <div class="txt">${esc(x.text)}</div>
+        <div class="meta">🕒 ${x.time} ${x.star?'· ⭐ 重要':''}</div>
+        <div class="ops">
+          <button class="icon" onclick="toggleStar('${x.id}')" title="重要">${x.star?'⭐':'☆'}</button>
+          <button class="icon" onclick="edit('${x.id}')" title="编辑">✏️</button>
+          <button class="icon" onclick="del('${x.id}')" title="删除">🗑️</button>
+        </div>
+      </div>`;
+    list.appendChild(d);
+  });
+  document.getElementById('sTotal').textContent=state.items.length;
+  document.getElementById('sTodo').textContent=state.items.filter(x=>!x.done).length;
+  document.getElementById('sDone').textContent=state.items.filter(x=>x.done).length;
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+render();
+</script>
+</body>
+</html>
